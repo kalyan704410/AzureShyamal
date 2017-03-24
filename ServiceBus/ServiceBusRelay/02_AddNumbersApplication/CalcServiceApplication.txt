@@ -1,0 +1,64 @@
+=> Service Application
+
+-> ICalc.cs - interface
+
+using System.ServiceModel;
+
+
+
+[ServiceContract]
+    interface ICalc
+    {
+        [OperationContract]
+        int Add(int a, int b);
+    }
+
+
+
+-> Program.cs
+
+
+using System.ServiceModel;
+using Microsoft.ServiceBus;
+
+
+ class Service : ICalc
+    {
+        public int Add(int a, int b)
+        {
+            return a + b;
+        }
+    }
+
+
+class Program
+    {
+        static void Main(string[] args)
+        {
+            var tp = TokenProvider.CreateSharedAccessSignatureTokenProvider("RootManageSharedAccessKey", "key-paste-here");
+
+            var sh = new ServiceHost(typeof(Service));
+
+            //Localhost
+            //sh.AddServiceEndpoint(
+            //    typeof(ICalc),
+            //    new NetTcpBinding(),
+            //    "net.tcp://localhost:8008/service");
+
+            //Service Bus
+            var se = sh.AddServiceEndpoint(
+               typeof(ICalc),
+               new NetTcpRelayBinding(),
+               "sb://namespace.servicebus.windows.net/service");
+
+            se.EndpointBehaviors.Add(new TransportClientEndpointBehavior(tp));
+            se.EndpointBehaviors.Add(new ServiceRegistrySettings(DiscoveryType.Public));
+            sh.Open();
+
+            Console.WriteLine("Press Enter to close");
+            Console.ReadLine();
+
+            sh.Close();
+        }
+    }
+

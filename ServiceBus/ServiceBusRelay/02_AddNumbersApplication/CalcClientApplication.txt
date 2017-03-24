@@ -1,0 +1,28 @@
+=> Client Application
+
+Add as link of interface
+
+
+-> Program.cs
+
+using Microsoft.ServiceBus;
+using System.ServiceModel;
+
+
+var tp = TokenProvider.CreateSharedAccessSignatureTokenProvider("RootManageSharedAccessKey", "key-paste-here");
+
+            //Locahost
+            //var cf = new ChannelFactory<IWho>(
+            //    new NetTcpBinding(),
+            //    "net.tcp://localhost:8008/service");
+
+            //Service Bus
+            var cf = new ChannelFactory<ICalc>(
+               new NetTcpRelayBinding(),
+               "sb://namespace.servicebus.windows.net/service");
+
+            cf.Endpoint.EndpointBehaviors.Add(new TransportClientEndpointBehavior(tp));
+
+            var ch = cf.CreateChannel();
+            Console.WriteLine(ch.Add(4,5));
+            Console.ReadLine();
